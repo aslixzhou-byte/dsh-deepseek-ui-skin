@@ -1,0 +1,554 @@
+/* DeepSeek Leviathan: a DeepSeek-brand presentation layer over the stock web
+   GUI. The whale backdrop is applied separately by client/index.ts; this file
+   owns the design tokens, the glass chrome, and the sidebar composition. */
+
+body[data-dsh-deepseek-whale] {
+  color: #10162b;
+  background-color: #eef3ff;
+  --ds-brand: #4d6bfe;
+  --ds-brand-strong: #2e4de6;
+  --ds-brand-soft: #8fa6ff;
+  --ds-navy-950: #070d24;
+  --ds-navy-900: #0b1437;
+  --ds-navy-800: #16205c;
+  --ds-navy-700: #243273;
+  --ds-ink: #10162b;
+  --ds-glass: rgba(255, 255, 255, 0.72);
+  --ds-shadow: 0 18px 54px rgba(46, 77, 230, 0.16), 0 2px 8px rgba(46, 77, 230, 0.1);
+
+  --dsw-alias-bg-base: transparent;
+  --dsw-alias-bg-layer-1: rgba(255, 255, 255, 0.74);
+  --dsw-alias-bg-layer-2: rgba(244, 248, 255, 0.86);
+  --dsw-alias-bg-layer-3: rgba(233, 240, 255, 0.9);
+  --dsw-alias-bg-overlay: rgba(255, 255, 255, 0.96);
+  --dsw-alias-border-l1: rgba(77, 107, 254, 0.16);
+  --dsw-alias-border-l2-darkmode-thin: rgba(77, 107, 254, 0.22);
+  --dsw-alias-border-l2: rgba(77, 107, 254, 0.28);
+  --dsw-alias-border-l3: rgba(46, 77, 230, 0.5);
+  --dsw-alias-brand-primary: #4d6bfe;
+  --dsw-alias-brand-text: #10162b;
+  --dsw-alias-button-elevated-fill: rgba(255, 255, 255, 0.9);
+  --dsw-alias-button-floating-fill: rgba(255, 255, 255, 0.95);
+  --dsw-alias-button-floating-hover: #e8eeff;
+  --dsw-alias-button-info-fill: #4d6bfe;
+  --dsw-alias-button-info-hover: #3b5bff;
+  --dsw-alias-interactive-bg-active: rgba(77, 107, 254, 0.2);
+  --dsw-alias-interactive-bg-hover: rgba(77, 107, 254, 0.1);
+  --dsw-alias-interactive-bg-hover-solid: #e8eeff;
+  --dsw-alias-label-primary: #10162b;
+  --dsw-alias-label-primary-bluish: #1c2f8a;
+  --dsw-alias-label-secondary: #45507e;
+  --dsw-alias-label-tertiary: #6b76a3;
+  --dsw-alias-label-caption: #8a94b8;
+  --dsw-alias-state-business-primary: #4d6bfe;
+  --dsw-alias-state-business-tertiary: #e2e9ff;
+  --dsw-shadow-lv2: var(--ds-shadow);
+  --dsw-specific-input-major: rgba(255, 255, 255, 0.85);
+  --dsw-specific-selector: rgba(233, 240, 255, 0.9);
+  /* The sidebar shares the conversation-pane surface: no fill of its own. */
+  --dsw-specific-sidebar-fill: transparent;
+}
+
+body[data-dsh-deepseek-whale][data-ds-dark-theme] {
+  color: #e7ecf7;
+  background-color: #070d24;
+  --ds-glass: rgba(16, 26, 66, 0.74);
+  --ds-shadow: 0 18px 58px rgba(0, 0, 0, 0.38), 0 2px 10px rgba(0, 0, 0, 0.3);
+  --dsw-alias-bg-base: transparent;
+  --dsw-alias-bg-layer-1: rgba(19, 32, 84, 0.88);
+  --dsw-alias-bg-layer-2: rgba(24, 40, 96, 0.9);
+  --dsw-alias-bg-layer-3: rgba(30, 48, 110, 0.93);
+  --dsw-alias-bg-overlay: rgba(11, 20, 55, 0.97);
+  --dsw-alias-border-l1: rgba(143, 166, 255, 0.2);
+  --dsw-alias-border-l2-darkmode-thin: rgba(143, 166, 255, 0.3);
+  --dsw-alias-border-l2: rgba(143, 166, 255, 0.34);
+  --dsw-alias-border-l3: rgba(143, 166, 255, 0.6);
+  --dsw-alias-brand-primary: #8fa6ff;
+  --dsw-alias-brand-text: #e7ecf7;
+  --dsw-alias-button-elevated-fill: rgba(24, 40, 96, 0.94);
+  --dsw-alias-button-floating-fill: rgba(26, 43, 102, 0.96);
+  --dsw-alias-button-floating-hover: #2c3f96;
+  --dsw-alias-button-info-fill: #4d6bfe;
+  --dsw-alias-button-info-hover: #3b5bff;
+  --dsw-alias-interactive-bg-active: rgba(143, 166, 255, 0.24);
+  --dsw-alias-interactive-bg-hover: rgba(143, 166, 255, 0.12);
+  --dsw-alias-interactive-bg-hover-solid: #22317a;
+  --dsw-alias-label-primary: #e7ecf7;
+  --dsw-alias-label-primary-bluish: #d5dff3;
+  --dsw-alias-label-secondary: #bcc8e6;
+  --dsw-alias-label-tertiary: #93a1cc;
+  --dsw-alias-label-caption: #7c8ab8;
+  --dsw-alias-state-business-primary: #8fa6ff;
+  --dsw-alias-state-business-tertiary: #243273;
+  --dsw-specific-input-major: rgba(22, 36, 92, 0.86);
+  --dsw-specific-selector: rgba(28, 46, 108, 0.9);
+  /* The sidebar shares the conversation-pane surface in dark mode too. */
+  --dsw-specific-sidebar-fill: transparent;
+}
+
+/* ---- Backdrop ---- */
+
+body[data-dsh-deepseek-whale]::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--ds-whale-backdrop-art) center / cover no-repeat;
+  pointer-events: none;
+}
+
+/* ---- Sidebar: shares the conversation pane surface exactly ---- */
+
+/* The sidebar gets NO skin-owned background: it stays transparent so both
+   columns render over the same backdrop, exactly like the right pane. Only a
+   hairline divider and the native brand recolor remain. */
+body[data-dsh-deepseek-whale] :is([data-pane='sidebar'], [class*='sidebarCol']) {
+  background: transparent;
+  border-right: 1px solid rgba(77, 107, 254, 0.14);
+}
+
+body[data-dsh-deepseek-whale] :is([data-pane='sidebar'], [class*='sidebarCol']) > div {
+  position: relative;
+}
+
+/* Selected session: a light brand-blue plaque (readable on either theme). */
+body[data-dsh-deepseek-whale] :is([data-pane='sidebar'], [class*='sidebarCol'])
+  [role='treeitem'][aria-selected='true'] {
+  background: linear-gradient(90deg, rgba(77, 107, 254, 0.22), rgba(77, 107, 254, 0.08));
+  color: inherit;
+  border-radius: 8px;
+}
+
+body[data-dsh-deepseek-whale] :is([data-pane='sidebar'], [class*='sidebarCol'])
+  [role='treeitem'][aria-selected='true'] [class*='title'] {
+  color: inherit;
+}
+
+/* Native brand kept; recolor its glyph toward the brand blue. */
+body[data-dsh-deepseek-whale] :is([data-pane='sidebar'], [class*='sidebarCol'])
+  button[class*='brand'] {
+  color: #4d6bfe;
+}
+
+/* Dark theme: the column stays transparent too — same surface as the pane. */
+body[data-dsh-deepseek-whale][data-ds-dark-theme]
+  :is([data-pane='sidebar'], [class*='sidebarCol']) {
+  background: transparent;
+  border-right: 1px solid rgba(143, 166, 255, 0.16);
+}
+
+body[data-dsh-deepseek-whale][data-ds-dark-theme]
+  :is([data-pane='sidebar'], [class*='sidebarCol'])
+  [role='treeitem'][aria-selected='true'] {
+  background: linear-gradient(90deg, rgba(77, 107, 254, 0.34), rgba(77, 107, 254, 0.12));
+  color: inherit;
+}
+
+body[data-dsh-deepseek-whale][data-ds-dark-theme]
+  :is([data-pane='sidebar'], [class*='sidebarCol'])
+  [role='treeitem'][aria-selected='true'] [class*='title'] {
+  color: inherit;
+}
+
+body[data-dsh-deepseek-whale][data-ds-dark-theme]
+  :is([data-pane='sidebar'], [class*='sidebarCol'])
+  button[class*='brand'] {
+  color: #c7d2fe;
+}
+
+/* ---- Frameless title bar ---- */
+
+body[data-dsh-deepseek-whale] [data-skin-chrome='titlebar-brand'] {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+body[data-dsh-deepseek-whale] [data-skin-chrome='titlebar-brand'] img {
+  height: 22px;
+  width: auto;
+}
+
+body[data-dsh-deepseek-whale] [class*='titlebar'] {
+  background: linear-gradient(to top, var(--ds-navy-900), var(--ds-navy-700));
+}
+
+body[data-dsh-deepseek-whale] [class*='titlebar'] [class*='button'] {
+  color: #c7d2fe;
+}
+
+/* ---- Composer: DeepSeek-blue glass card ---- */
+
+body[data-dsh-deepseek-whale] [data-composer-card] {
+  background: var(--ds-glass);
+  border: 1px solid rgba(77, 107, 254, 0.26);
+  border-radius: 16px;
+  box-shadow: var(--ds-shadow);
+  backdrop-filter: blur(6px) saturate(1.05);
+}
+
+body[data-dsh-deepseek-whale] [data-composer-card] textarea:focus {
+  outline: 2px solid rgba(77, 107, 254, 0.55);
+  outline-offset: 2px;
+}
+
+/* Send / primary action in the brand blue. */
+body[data-dsh-deepseek-whale] [data-composer-card] button[class*='primary'],
+body[data-dsh-deepseek-whale] [data-composer-card] button[aria-haspopup='dialog'][class*='trigger'] {
+  color: #4d6bfe;
+}
+
+body[data-dsh-deepseek-whale] [data-composer-card] button[class*='primary'] {
+  background: linear-gradient(145deg, #6e8bff, #2e4de6);
+  color: #ffffff;
+}
+
+/* ---- Terminal & code: cool navy surfaces ---- */
+
+body[data-dsh-deepseek-whale] [data-terminal] {
+  --dsw-alias-markdown-code-block: rgba(248, 250, 255, 0.97);
+  --dsw-alias-label-primary: #10162b;
+  text-shadow: none;
+}
+
+body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-terminal] {
+  --dsw-alias-markdown-code-block: rgba(10, 18, 48, 0.97);
+  --dsw-alias-label-primary: #e7ecf7;
+}
+
+/* ---- Question / todo panels: paired readable surfaces ---- */
+
+body[data-dsh-deepseek-whale] [data-question-key] {
+  --dsw-alias-label-primary: #10162b;
+}
+
+body[data-dsh-deepseek-whale] [data-question-key] > section {
+  background: rgba(255, 255, 255, 0.97);
+}
+
+body[data-dsh-deepseek-whale] [data-question-key] [aria-checked='true'] {
+  background: linear-gradient(90deg, rgba(77, 107, 254, 0.26), rgba(77, 107, 254, 0.1));
+}
+
+body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-question-key] {
+  --dsw-alias-label-primary: #edf1fa;
+}
+
+body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-question-key] > section {
+  background: rgba(19, 32, 84, 0.98);
+}
+
+body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-question-key] [aria-checked='true'] {
+  background: linear-gradient(90deg, rgba(77, 107, 254, 0.4), rgba(77, 107, 254, 0.18));
+}
+
+body[data-dsh-deepseek-whale] [data-testid='todo-panel'] {
+  --dsw-alias-label-primary: #10162b;
+}
+
+body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-testid='todo-panel'] {
+  --dsw-alias-label-primary: #e7ecf7;
+}
+
+/* ---- Settings dialog: translucent glass over the dimmed composer ---- */
+
+body[data-dsh-deepseek-whale] [data-slot='sidebar.settings'] [role='presentation']
+  > [role='dialog'][aria-modal='true'] {
+  --dsw-alias-bg-layer-2: rgba(244, 248, 255, 0.7);
+  backdrop-filter: blur(6px) saturate(0.95);
+}
+
+body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-slot='sidebar.settings'] [role='presentation']
+  > [role='dialog'][aria-modal='true'] {
+  --dsw-alias-bg-layer-2: rgba(24, 40, 96, 0.84);
+}
+
+/* ---- Assistant markdown bubbles: soft porcelain with a blue corner ---- */
+
+body[data-dsh-deepseek-whale] [data-chat-flow-kind='assistant-step'] > * > * > *
+  div[class*='markdown'] {
+  max-width: min(680px, 96%);
+  padding: 14px 18px;
+  border-radius: 16px 16px 16px 6px;
+  background: rgba(255, 255, 255, 0.66);
+}
+
+body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-chat-flow-kind='assistant-step'] > * > * > *
+  div[class*='markdown'] {
+  background: rgba(19, 32, 84, 0.72);
+}
+
+/* ---- Hero headline on the light whale sky ---- */
+
+body[data-dsh-deepseek-whale] [data-phase='hero'] [class*='headlineText'] {
+  color: #10162b;
+  text-shadow: 0 2px 6px rgba(255, 255, 255, 0.6);
+}
+
+body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-phase='hero'] [class*='headlineText'] {
+  color: #f4f7ff;
+  text-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* ---- Centered brand lockup: official whale + DeepSeek wordmark ---- */
+
+/* Seat the lockup at the middle of the conversation pane (right of the
+   sidebar). The pane center shifts with the sidebar, so the offset rides the
+   same --maid-sidebar-width custom property the backdrop uses. It is a pure
+   backdrop layer: z-index -1 (same floor as the backdrop art), pointer-events
+   none and no hover styling — it never covers messages or steals clicks. */
+body[data-dsh-deepseek-whale] [data-skin-chrome='brand-lockup'] {
+  position: fixed;
+  left: calc(50% + (var(--maid-sidebar-width, 280px) / 2));
+  top: 42%;
+  transform: translate(-50%, -50%);
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.9;
+  filter: drop-shadow(0 0 22px rgba(77, 107, 254, 0.45))
+          drop-shadow(0 0 60px rgba(77, 107, 254, 0.28))
+          drop-shadow(0 14px 34px rgba(46, 77, 230, 0.3));
+}
+
+/* Large: matches the original backdrop whale footprint (~600px wide). */
+body[data-dsh-deepseek-whale] [data-skin-chrome='brand-lockup'] [data-brand-glyph] {
+  display: block;
+  width: clamp(430px, 42vw, 620px);
+  height: auto;
+}
+
+body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-skin-chrome='brand-lockup'] {
+  filter: drop-shadow(0 0 26px rgba(143, 166, 255, 0.5))
+          drop-shadow(0 0 70px rgba(143, 166, 255, 0.3))
+          drop-shadow(0 14px 34px rgba(0, 0, 0, 0.45));
+}
+
+/* ============================================================
+   Detail layer: DeepSeek-blue glow, glass, and motion accents
+   (mirrors the maid-atelier ornament stack, re-inked in brand blue)
+   ============================================================ */
+
+/* 1. Top edge glow strip: a 2px brand-blue light band across the viewport. */
+body[data-dsh-deepseek-whale]::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 30;
+  background: linear-gradient(90deg, transparent, rgba(77, 107, 254, 0.9) 18%, #4d6bfe 50%, rgba(77, 107, 254, 0.9) 82%, transparent);
+  box-shadow: 0 0 12px rgba(77, 107, 254, 0.55), 0 0 32px rgba(77, 107, 254, 0.3);
+  pointer-events: none;
+}
+
+body[data-dsh-deepseek-whale][data-ds-dark-theme]::after {
+  background: linear-gradient(90deg, transparent, rgba(143, 166, 255, 0.85) 18%, #8fa6ff 50%, rgba(143, 166, 255, 0.85) 82%, transparent);
+  box-shadow: 0 0 14px rgba(143, 166, 255, 0.6), 0 0 40px rgba(143, 166, 255, 0.35);
+}
+
+/* 2. Composer: pale-blue glass border that blooms on focus. */
+body[data-dsh-deepseek-whale] [data-composer-card] {
+  border: 1px solid rgba(77, 107, 254, 0.35);
+  box-shadow: var(--ds-shadow), 0 0 0 1px rgba(77, 107, 254, 0.08), 0 0 18px rgba(77, 107, 254, 0.1);
+  transition: border-color 260ms ease, box-shadow 260ms ease;
+}
+
+body[data-dsh-deepseek-whale] [data-composer-card]:focus-within {
+  border-color: rgba(77, 107, 254, 0.65);
+  box-shadow: var(--ds-shadow), 0 0 0 1px rgba(77, 107, 254, 0.2), 0 0 26px rgba(77, 107, 254, 0.28);
+}
+
+body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-composer-card] {
+  border-color: rgba(143, 166, 255, 0.4);
+  box-shadow: var(--ds-shadow), 0 0 0 1px rgba(143, 166, 255, 0.1), 0 0 18px rgba(143, 166, 255, 0.12);
+}
+
+body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-composer-card]:focus-within {
+  border-color: rgba(143, 166, 255, 0.7);
+  box-shadow: var(--ds-shadow), 0 0 0 1px rgba(143, 166, 255, 0.22), 0 0 28px rgba(143, 166, 255, 0.3);
+}
+
+/* 3. Selected session: a brand-blue left-edge indicator bar instead of a
+      full-row plaque (the maid session plaque, re-inked). */
+body[data-dsh-deepseek-whale] :is([data-pane='sidebar'], [class*='sidebarCol'])
+  [role='treeitem'][aria-selected='true'] {
+  position: relative;
+  background: linear-gradient(90deg, rgba(77, 107, 254, 0.16), rgba(77, 107, 254, 0.05));
+  color: inherit;
+  border-radius: 6px;
+}
+
+body[data-dsh-deepseek-whale] :is([data-pane='sidebar'], [class*='sidebarCol'])
+  [role='treeitem'][aria-selected='true']::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 20%;
+  bottom: 20%;
+  width: 3px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #4d6bfe, #8fa6ff);
+  box-shadow: 0 0 8px rgba(77, 107, 254, 0.6);
+}
+
+body[data-dsh-deepseek-whale][data-ds-dark-theme] :is([data-pane='sidebar'], [class*='sidebarCol'])
+  [role='treeitem'][aria-selected='true']::before {
+  background: linear-gradient(180deg, #8fa6ff, #4d6bfe);
+  box-shadow: 0 0 8px rgba(143, 166, 255, 0.6);
+}
+
+/* 4. Message bubbles: user = brand-blue gradient; assistant = porcelain glass
+      with a blue left edge (dark theme gets the deep-sea versions). */
+body[data-dsh-deepseek-whale] [data-chat-flow-kind='user'] > * > * > *
+  div[class*='markdown'] {
+  max-width: min(680px, 96%);
+  padding: 14px 18px;
+  border-radius: 18px 18px 7px 18px;
+  background: linear-gradient(145deg, #6e8bff, #2e4de6);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(46, 77, 230, 0.28), 0 0 12px rgba(77, 107, 254, 0.16);
+}
+
+body[data-dsh-deepseek-whale] [data-chat-flow-kind='assistant-step'] > * > * > *
+  div[class*='markdown'] {
+  max-width: min(680px, 96%);
+  padding: 14px 18px;
+  border-radius: 18px 18px 18px 7px;
+  border: 1px solid rgba(77, 107, 254, 0.24);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 4px 14px rgba(46, 77, 230, 0.1), inset 3px 0 0 rgba(77, 107, 254, 0.35);
+}
+
+body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-chat-flow-kind='user'] > * > * > *
+  div[class*='markdown'] {
+  background: linear-gradient(145deg, #3b5bff, #2439c9);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35), 0 0 14px rgba(77, 107, 254, 0.3);
+}
+
+body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-chat-flow-kind='assistant-step'] > * > * > *
+  div[class*='markdown'] {
+  border-color: rgba(143, 166, 255, 0.3);
+  background: rgba(19, 32, 84, 0.78);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25), inset 3px 0 0 rgba(143, 166, 255, 0.4);
+}
+
+/* 5. Primary actions (send / new session): brand-blue gradient + hover glow. */
+body[data-dsh-deepseek-whale] [data-composer-card] button[class*='primary'] {
+  background: linear-gradient(145deg, #6e8bff, #2e4de6);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 2px 10px rgba(46, 77, 230, 0.35);
+  transition: box-shadow 220ms ease, transform 220ms ease, filter 220ms ease;
+}
+
+body[data-dsh-deepseek-whale] [data-composer-card] button[class*='primary']:hover:not(:disabled) {
+  box-shadow: 0 2px 14px rgba(46, 77, 230, 0.55), 0 0 18px rgba(77, 107, 254, 0.4);
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+body[data-dsh-deepseek-whale] button[class*='newSession'] {
+  background: linear-gradient(145deg, #6e8bff, #2e4de6);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 2px 10px rgba(46, 77, 230, 0.3);
+  transition: box-shadow 220ms ease, transform 220ms ease, filter 220ms ease;
+}
+
+body[data-dsh-deepseek-whale] button[class*='newSession']:hover {
+  box-shadow: 0 2px 14px rgba(46, 77, 230, 0.5), 0 0 16px rgba(77, 107, 254, 0.35);
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+body[data-dsh-deepseek-whale] [data-composer-card] button[class*='primary'] svg,
+body[data-dsh-deepseek-whale] button[class*='newSession'] svg {
+  color: #ffffff;
+}
+
+/* 6. Scrollbars: slim translucent brand-blue thumbs. */
+body[data-dsh-deepseek-whale] ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+body[data-dsh-deepseek-whale] ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+body[data-dsh-deepseek-whale] ::-webkit-scrollbar-thumb {
+  background: rgba(77, 107, 254, 0.35);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+body[data-dsh-deepseek-whale] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(77, 107, 254, 0.55);
+  background-clip: content-box;
+  border: 2px solid transparent;
+}
+
+body[data-dsh-deepseek-whale][data-ds-dark-theme] ::-webkit-scrollbar-thumb {
+  background: rgba(143, 166, 255, 0.4);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+/* 8. Hero headline: a slim gradient rule under the landing title. */
+body[data-dsh-deepseek-whale] [data-phase='hero'] [class*='headline']::after {
+  content: '';
+  display: block;
+  width: min(240px, 70%);
+  height: 2px;
+  margin: 10px auto 0;
+  border-radius: 1px;
+  background: linear-gradient(90deg, transparent, rgba(77, 107, 254, 0.8), transparent);
+}
+
+body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-phase='hero'] [class*='headline']::after {
+  background: linear-gradient(90deg, transparent, rgba(143, 166, 255, 0.8), transparent);
+}
+
+/* 9. Particle waterline at the viewport floor: blue light motes stream
+      continuously from the left edge to the right, each on its own delay,
+      speed, height, and size (seeded by client/index.ts). */
+body[data-dsh-deepseek-whale] [data-skin-chrome='bottom-waves'] {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 56px;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+body[data-dsh-deepseek-whale] [data-skin-chrome='bottom-waves'] [data-skin-particle] {
+  position: absolute;
+  top: var(--ds-mote-top, 20px);
+  left: -12px;
+  width: var(--ds-mote-size, 3px);
+  height: var(--ds-mote-size, 3px);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(143, 166, 255, 0.95), rgba(77, 107, 254, 0.35) 60%, transparent 100%);
+  box-shadow: 0 0 6px rgba(77, 107, 254, 0.8), 0 0 12px rgba(77, 107, 254, 0.4);
+  opacity: var(--ds-mote-opacity, 0.6);
+  animation: ds-mote-stream var(--ds-mote-duration, 7s) linear infinite;
+  animation-delay: var(--ds-mote-delay, 0s);
+}
+
+@keyframes ds-mote-stream {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(100vw + 24px)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-dsh-deepseek-whale] [data-skin-chrome='bottom-waves'] {
+    display: none;
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "id": "deepseek-whale",
+  "name": "DeepSeek 蓝鲸",
+  "nameEn": "DeepSeek Leviathan",
+  "author": "dsh-deep-whale",
+  "tagline": "品牌鲸鱼背景、深海蓝渐变界面与蓝色玻璃质感",
+  "description": "一套面向 DeepSeek Harness WebUI 的 DeepSeek 品牌风格皮肤。以官方鲸鱼轮廓作为对话区背景，以 DeepSeek 品牌蓝（#4D6BFE）与深海蓝渐变构成 UI 覆盖层，为加载、思考和工具运行状态预留稳定动画钩子。",
+  "tags": [
+    "deepseek",
+    "whale",
+    "brand",
+    "blue",
+    "glass",
+    "minimal"
+  ],
+  "accent": "#4d6bfe",
+  "bodyAttr": "data-dsh-deepseek-whale",
+  "package": "@dsh-external/dsh-client-ui-skin-deepseek-whale",
+  "wiring": {
+    "id": "ui-skin-deepseek-whale",
+    "bundleWired": false
+  },
+  "order": 4
+}
