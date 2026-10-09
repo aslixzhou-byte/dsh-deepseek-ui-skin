@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Standalone offline bundle builder for the deepseek-whale skin.
  *
  * The official pipeline is `pnpm build` (tsdown + lightningcss), which needs
@@ -63,11 +63,30 @@ writeFileSync(join(ROOT, 'lib/index.js'), hostEntry)
 // --- client bundle ---
 // official-path.generated.ts and official-wordmark.generated.ts hold the
 // official whale glyph and wordmark; whale-art.ts imports both, so all three
-// must be inlined (imports are erased by dropImports).
+// must be inlined (imports are erased by dropImports). The whale backdrop and
+// wordmark lockup art were removed from the skin's visible surface, but
+// whale-art.ts still supplies the favicon and title-bar brand.
 const officialPathJs = toEmbeddableJs(join(ROOT, 'src/client/official-path.generated.ts'), { dropImports: true })
-const officialWordmarkJs = toEmbeddableJs(join(ROOT, 'src/client/official-wordmark.generated.ts'), { dropImports: true })
 const artJs = toEmbeddableJs(join(ROOT, 'src/client/whale-art.ts'), { dropImports: true })
-const cssText = readFileSync(join(ROOT, `src/client/${CSS_FILENAME}`), 'utf8')
+
+// The wallpaper is a real raster asset, inlined as a data URI because the
+// client bundle is loaded on its own from /plugins/<id>/client.js: a relative
+// url() inside this CSS would resolve against that script URL, not against a
+// directory the host serves, so a sibling file reference would 404. Inlining
+// keeps the skin a single self-contained artifact with no extra route.
+//
+// Source is WebP q82 at full resolution: the original PNG was 2.55 MB, which
+// base64-encodes to ~3.4 MB and would dominate every page load, while the WebP
+// is visually indistinguishable at 164 KB. The CSS carries a placeholder token
+// that is substituted here, so the stylesheet stays readable in source form.
+const BACKGROUND_ASSET = 'src/client/assets/ui-background.webp'
+const BACKGROUND_TOKEN = '__DS_UI_BACKGROUND__'
+const backgroundDataUri = `data:image/webp;base64,${readFileSync(join(ROOT, BACKGROUND_ASSET)).toString('base64')}`
+const cssRaw = readFileSync(join(ROOT, `src/client/${CSS_FILENAME}`), 'utf8')
+if (!cssRaw.includes(BACKGROUND_TOKEN)) {
+  throw new Error(`build: ${CSS_FILENAME} no longer contains the ${BACKGROUND_TOKEN} placeholder — the wallpaper would silently not be applied`)
+}
+const cssText = cssRaw.replaceAll(BACKGROUND_TOKEN, backgroundDataUri)
 
 // index.ts: strip TS, inline the art module by removing its import line, and
 // swap the CSS side-effect import for the style injection block.
@@ -98,13 +117,10 @@ const clientBundle = `window.__ModuleLoader__.load({
 \t\tvar module = { exports: {} };
 \t\tvar exports = module.exports;
 \t\tObject.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-		//#region src/client/official-wordmark.generated.ts
-${officialWordmarkJs}
-		//#endregion
 		//#region src/client/official-path.generated.ts
 ${officialPathJs}
 		//#endregion
-\t\t//#region src/client/whale-art.ts
+		//#region src/client/whale-art.ts
 ${artJs}
 \t\t//#endregion
 \t\t//#region src/client/deepseek-whale.module.css

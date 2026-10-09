@@ -102,22 +102,19 @@ describe('DeepSeek Leviathan skin apply', () => {
     foreign.remove()
   })
 
-  it('swaps the whale backdrop when the dark theme attribute flips', async () => {
+  it('leaves the conversation pane clean: no backdrop art at all', async () => {
     fiber = await mount()
-    const light = document.body.style.backgroundImage
-    expect(light).toContain('data:image/svg+xml')
-    expect(light).not.toContain('linear-gradient')
+    expect(document.body.style.backgroundImage).toBe('')
 
     document.body.setAttribute('data-ds-dark-theme', '')
     await flushMutations()
-    expect(document.body.style.backgroundImage).toContain('data:image/svg+xml')
-    expect(document.body.style.backgroundImage).not.toBe(light)
+    expect(document.body.style.backgroundImage).toBe('')
 
     await fiber.dispose()
     expect(document.body.style.backgroundImage).toBe('')
   })
 
-  it('mounts the permanent brand lockup and keeps the native brand intact', async () => {
+  it('keeps the native sidebar brand intact and mounts no lockup', async () => {
     document.body.innerHTML = `
       <div data-pane="sidebar">
         <div>
@@ -129,10 +126,7 @@ describe('DeepSeek Leviathan skin apply', () => {
     `
     fiber = await mount()
 
-    const lockup = document.querySelector<HTMLElement>("[data-skin-chrome='brand-lockup']")
-    expect(lockup).not.toBeNull()
-    const glyph = lockup?.querySelector<HTMLImageElement>("[data-brand-glyph='lockup']")
-    expect(glyph?.src).toContain('data:image/svg+xml')
+    expect(document.querySelector("[data-skin-chrome='brand-lockup']")).toBeNull()
     const brand = document.querySelector("button[class*='brand'] > svg")
     expect(brand).not.toBeNull()
 
@@ -140,15 +134,23 @@ describe('DeepSeek Leviathan skin apply', () => {
     expect(document.querySelector("[data-skin-owner='deepseek-whale']")).toBeNull()
   })
 
-  it('keeps the brand lockup mounted when the sidebar mounts later', async () => {
-    fiber = await mount()
-    document.body.insertAdjacentHTML(
-      'beforeend',
-      '<div data-pane="sidebar"><div><button class="fixture_brand"><svg></svg></button></div></div>',
-    )
-    await flushMutations()
+  it('hides the shell pane brand art and restores it on dispose', async () => {
+    const shellMark = document.createElement('div')
+    shellMark.className = 'fixture_whaleMark'
+    document.body.append(shellMark)
+    const paneArt = document.createElement('div')
+    paneArt.style.setProperty('--dsh-bg-whale', 'url(/assets/logo-abc123.svg)')
+    document.body.append(paneArt)
 
-    expect(document.querySelector("[data-skin-chrome='brand-lockup']")).not.toBeNull()
+    fiber = await mount()
+
+    expect(shellMark.style.display).toBe('none')
+    expect(paneArt.style.display).toBe('none')
+
+    await fiber.dispose()
+    expect(shellMark.style.display).toBe('')
+    expect(paneArt.style.display).toBe('')
+    expect(document.querySelector('[data-skin-hidden-whale]')).toBeNull()
   })
 
   it('pins the skin title and restores the original on dispose', async () => {
@@ -167,20 +169,17 @@ describe('DeepSeek Leviathan skin apply', () => {
     expect(document.querySelector("link[data-skin-chrome='favicon']")).toBeNull()
   })
 
-  it('styles the brand blue accent, transparent sidebar, and backdrop-layer lockup', () => {
+  it('styles the brand blue accent, transparent sidebar, and clean pane', () => {
     expect(CSS).toContain('--dsw-alias-brand-primary: #4d6bfe')
     // The sidebar shares the pane surface: no skin-owned background.
     expect(CSS).toMatch(
       /\[data-pane='sidebar'\][^{]*\{[\s\S]*?background: transparent/,
     )
-    // The brand lockup is a pure backdrop layer: below content, click-through.
-    expect(CSS).toMatch(
-      /\[data-skin-chrome='brand-lockup'\][^{]*\{[\s\S]*?z-index: -1/,
-    )
-    expect(CSS).toMatch(
-      /\[data-skin-chrome='brand-lockup'\][^{]*\{[\s\S]*?pointer-events: none/,
-    )
-    expect(CSS).not.toContain("brand-lockup']:hover")
+    // The pane carries no skin-owned whale art any more.
+    expect(CSS).not.toContain("brand-lockup")
+    expect(CSS).not.toContain('--ds-whale-backdrop-art')
+    // The shell's own pane brand is suppressed deterministically.
+    expect(CSS).toMatch(/\[class\*='whale-mark'\][^{]*\{[\s\S]*?display: none !important/)
     expect(CSS).toMatch(/\[data-ds-dark-theme\]\s*\{[\s\S]*?--dsw-alias-bg-layer-1: rgba\(19, 32, 84, 0\.88\)/)
   })
 
@@ -202,11 +201,24 @@ describe('DeepSeek Leviathan skin apply', () => {
     expect(CSS).toMatch(/::-webkit-scrollbar-thumb\s*\{[\s\S]*?rgba\(77, 107, 254, 0\.35\)/)
     // Hero headline rule.
     expect(CSS).toMatch(/\[data-phase='hero'\] \[class\*='headline'\]::after\s*\{[\s\S]*?height: 2px/)
-    // The bottom waterline is a continuous left-to-right particle stream.
-    expect(CSS).toMatch(/\[data-skin-chrome='bottom-waves'\]\s*\{[\s\S]*?overflow: hidden/)
-    expect(CSS).toMatch(/\[data-skin-particle\]\s*\{[\s\S]*?animation: ds-mote-stream/)
+    // Mirrored edge waterlines: bottom flows left-to-right, top right-to-left.
+    expect(CSS).toMatch(/\[data-skin-chrome='bottom-waves'\],\s*body\[data-dsh-deepseek-whale\] \[data-skin-chrome='top-waves'\]\s*\{[\s\S]*?height: 56px/)
+    expect(CSS).toMatch(/\[data-skin-chrome='bottom-waves'\]\s*\{[\s\S]*?bottom: 0/)
+    expect(CSS).toMatch(/\[data-skin-chrome='top-waves'\]\s*\{[\s\S]*?top: 0/)
+    expect(CSS).toMatch(/\[data-skin-chrome='bottom-waves'\] \[data-skin-particle\]\s*\{[\s\S]*?left: -12px/)
+    expect(CSS).toMatch(/\[data-skin-chrome='top-waves'\] \[data-skin-particle\]\s*\{[\s\S]*?right: -12px/)
+    expect(CSS).toMatch(/\[data-skin-chrome='top-waves'\] \[data-skin-particle\]\s*\{[\s\S]*?animation-direction: reverse/)
     expect(CSS).toContain('@keyframes ds-mote-stream')
-    expect(CSS).not.toContain('ds-waterline-flow')
+    // Layered above it: a full-viewport, depth-banded free-drift field.
+    expect(CSS).toMatch(/\[data-skin-chrome='particle-field'\]\s*\{[\s\S]*?position: fixed/)
+    expect(CSS).toMatch(/\[data-skin-chrome='particle-field'\]\s*\{[\s\S]*?inset: 0/)
+    expect(CSS).toMatch(/\[data-skin-chrome='particle-field'\]\s*\{[\s\S]*?pointer-events: none/)
+    expect(CSS).toMatch(/\[data-skin-depth='far'\]\s*\{[\s\S]*?blur/)
+    expect(CSS).toMatch(/\[data-skin-depth='near'\]\s*\{[\s\S]*?width: 8px/)
+    // The field is pointer-driven by JS, so it must carry no competing CSS
+    // animation (a keyframe on transform would fight the RAF writer).
+    expect(CSS).not.toContain('ds-mote-float')
+    expect(CSS).toMatch(/\[data-skin-chrome='particle-field'\] \[data-skin-particle\]\s*\{[\s\S]*?will-change: transform/)
     expect(CSS).not.toContain("sidebarCol']) > div::after")
     expect(CSS).not.toContain('ds-whale-swell-right')
   })

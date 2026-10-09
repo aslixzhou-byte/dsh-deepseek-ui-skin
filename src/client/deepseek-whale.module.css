@@ -1,6 +1,145 @@
 /* DeepSeek Leviathan: a DeepSeek-brand presentation layer over the stock web
-   GUI. The whale backdrop is applied separately by client/index.ts; this file
-   owns the design tokens, the glass chrome, and the sidebar composition. */
+   GUI. The conversation pane is deliberately clean: no whale backdrop and no
+   brand lockup. This file owns the design tokens, the glass chrome, and the
+   sidebar composition.
+
+   Material system (Liquid Glass-inspired Web CSS):
+   Surfaces are graded in five tiers so nothing reads as one flat sheet of
+   plastic. `--ds-glass-*` carries each tier's fill alpha, blur radius, border
+   and shadow; the `.glass` classes below consume them.
+
+     nav      most transparent — the environment colour shows through most
+     toolbar  mid transparency, enough to read the controls
+     card     mostly opaque, less extra blur (blur is expensive and adds little
+              once the fill is this solid)
+     ai       the assistant output surface: a light card-grade glass so replies
+              separate from the pane without becoming a heavy bubble
+     modal    strongest white coverage, for the current focus
+     reading  near-solid, for long-form text
+
+   Two hard rules from the reference guidance, both load-bearing:
+   1. Never set `opacity` on a parent. It fades text, icons and focus rings
+      together; transparency belongs in the background colour only.
+   2. No glass on glass. An inner control sitting on a glass surface uses a
+      plain fill and a hairline border instead of another backdrop-filter.
+   Every glass surface has a solid-colour fallback for browsers without
+   backdrop-filter, and honours reduced-transparency / more-contrast. */
+
+body[data-dsh-deepseek-whale] {
+  /* Background stack, bottom to top:
+       1. the flat environmental base colour;
+       2. the wallpaper artwork (a raster asset inlined at build time — see the
+          placeholder note below);
+       3. a soft white veil that keeps body text legible over the artwork;
+       4. the two brand-blue edge glows.
+     The glows sit ON TOP of the artwork on purpose: they were tuned against a
+     plain surface, and keeping them above means the artwork reads as a texture
+     underneath the UI's own light rather than replacing it.
+
+     The wallpaper data URI is substituted into `--ds-wallpaper-art` by
+     build/build-standalone.mjs, replacing the placeholder token that appears
+     exactly once below. A relative url() would not work here: this stylesheet is
+     delivered inside client.js, which the host serves from
+     /plugins/<id>/client.js, so a sibling path has nothing to resolve against.
+     Holding the URI in a custom property keeps the (large) payload in the
+     stylesheet exactly once, with every use site referencing the variable. */
+  background-color: var(--ds-env-base);
+  background-image:
+    radial-gradient(70rem 45rem at var(--ds-env-warm-x) 6%, var(--ds-env-warm), transparent 55%),
+    radial-gradient(70rem 44rem at var(--ds-env-cool-x) 9%, var(--ds-env-cool), transparent 58%),
+    linear-gradient(var(--ds-wallpaper-veil), var(--ds-wallpaper-veil)),
+    var(--ds-wallpaper-art);
+  background-size: auto, auto, auto, cover;
+  background-position: center, center, center, center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+body[data-dsh-deepseek-whale] {
+  --ds-wallpaper-art: url('__DS_UI_BACKGROUND__');
+}
+
+/* ---- Glass surfaces ----
+   Five graded tiers. Each sets only fill alpha, blur and edge treatment; the
+   classes are applied by the skin's own selectors below, never by page markup. */
+
+body[data-dsh-deepseek-whale] [data-skin-glass] {
+  -webkit-backdrop-filter: blur(var(--ds-glass-blur, 18px)) saturate(130%);
+  backdrop-filter: blur(var(--ds-glass-blur, 18px)) saturate(130%);
+  border: 1px solid var(--ds-glass-border);
+  box-shadow:
+    inset 0 1px 0 var(--ds-glass-highlight),
+    var(--ds-glass-shadow-soft);
+}
+
+body[data-dsh-deepseek-whale] [data-skin-glass='nav'] {
+  --ds-glass-blur: var(--ds-glass-nav-blur);
+  background: linear-gradient(145deg,
+    rgba(255, 255, 255, var(--ds-glass-nav-a)),
+    rgba(255, 255, 255, var(--ds-glass-nav-b)));
+}
+
+body[data-dsh-deepseek-whale] [data-skin-glass='toolbar'] {
+  --ds-glass-blur: var(--ds-glass-toolbar-blur);
+  background: linear-gradient(145deg,
+    rgba(255, 255, 255, var(--ds-glass-toolbar-a)),
+    rgba(255, 255, 255, var(--ds-glass-toolbar-b)));
+}
+
+body[data-dsh-deepseek-whale] [data-skin-glass='card'] {
+  --ds-glass-blur: var(--ds-glass-card-blur);
+  background: linear-gradient(145deg,
+    rgba(255, 255, 255, var(--ds-glass-card-a)),
+    rgba(255, 255, 255, var(--ds-glass-card-b)));
+  box-shadow:
+    inset 0 1px 0 var(--ds-glass-highlight),
+    var(--ds-glass-shadow);
+}
+
+body[data-dsh-deepseek-whale] [data-skin-glass='modal'] {
+  --ds-glass-blur: var(--ds-glass-modal-blur);
+  background: linear-gradient(145deg,
+    rgba(255, 255, 255, var(--ds-glass-modal-a)),
+    rgba(255, 255, 255, var(--ds-glass-modal-b)));
+  box-shadow:
+    inset 0 1px 0 var(--ds-glass-highlight),
+    var(--ds-glass-shadow);
+}
+
+body[data-dsh-deepseek-whale] [data-skin-glass='reading'] {
+  --ds-glass-blur: var(--ds-glass-reading-blur);
+  background: linear-gradient(145deg,
+    rgba(255, 255, 255, var(--ds-glass-reading-a)),
+    rgba(255, 255, 255, var(--ds-glass-reading-b)));
+  box-shadow:
+    inset 0 1px 0 var(--ds-glass-highlight),
+    var(--ds-glass-shadow);
+}
+
+/* Dark theme swaps the fill colour from white to navy while keeping the same
+   tier alphas, so the grading survives the theme flip. */
+body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-skin-glass='nav'] {
+  background: linear-gradient(145deg,
+    rgba(19, 32, 84, var(--ds-glass-nav-a)),
+    rgba(11, 20, 55, var(--ds-glass-nav-b)));
+}
+
+body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-skin-glass='toolbar'] {
+  background: linear-gradient(145deg,
+    rgba(19, 32, 84, var(--ds-glass-toolbar-a)),
+    rgba(11, 20, 55, var(--ds-glass-toolbar-b)));
+}
+
+body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-skin-glass='card'],
+body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-skin-glass='ai'],
+body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-skin-glass='modal'],
+body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-skin-glass='reading'] {
+  background: linear-gradient(145deg,
+    rgba(19, 32, 84, var(--ds-glass-card-a)),
+    rgba(11, 20, 55, var(--ds-glass-card-b)));
+}
+
+/* ---- Design tokens ---- */
 
 body[data-dsh-deepseek-whale] {
   color: #10162b;
@@ -15,6 +154,84 @@ body[data-dsh-deepseek-whale] {
   --ds-ink: #10162b;
   --ds-glass: rgba(255, 255, 255, 0.72);
   --ds-shadow: 0 18px 54px rgba(46, 77, 230, 0.16), 0 2px 8px rgba(46, 77, 230, 0.1);
+
+  /* ---- Environmental light: a cool brand-blue wash on both edges, with the
+     centre left white and calm so body text keeps its contrast. The glows are
+     large and low-saturation on purpose: a high-frequency background would
+     fight the text it is supposed to sit behind. ---- */
+  --ds-env-warm: rgba(143, 166, 255, 0.36);
+  --ds-env-cool: rgba(77, 107, 254, 0.3);
+  --ds-env-warm-x: -6%;
+  --ds-env-cool-x: 106%;
+  --ds-env-base: #f2f6ff;
+  /* White veil over the wallpaper. Tuned so the artwork stays clearly visible
+     as texture while body text keeps its contrast on top of it. */
+  --ds-wallpaper-veil: rgba(255, 255, 255, 0.62);
+
+  /* ---- Material tiers ---- */
+  --ds-glass-nav-a: 0.42;
+  --ds-glass-nav-b: 0.2;
+  --ds-glass-nav-blur: 24px;
+  --ds-glass-toolbar-a: 0.58;
+  --ds-glass-toolbar-b: 0.34;
+  --ds-glass-toolbar-blur: 18px;
+  --ds-glass-card-a: 0.72;
+  --ds-glass-card-b: 0.5;
+  --ds-glass-card-blur: 12px;
+  /* The assistant surface is the one WARM material in the system. It carries the
+     conversation's semantic split: the user's words are brand cool blue, the
+     model's reply is a pale rose. The fill is a tint rather than just a lower
+     white alpha — dropping the alpha alone would only make the surface more
+     transparent, not deeper.
+
+     Ink is a mid violet, not a brown: brown on pink reads as muddy, and it was
+     the brown hue family that made the earlier attempts look wrong. The violet
+     has to be this deep to clear WCAG AA — a genuinely pale violet
+     (e.g. #9d8bc4) only reaches ~2.8:1 on this fill, so #6b5299 (~5.9:1) is the
+     lightest that stays readable. */
+  /* Gradient: a near-white pink at one end fading into a lavender-pink at the
+     other. The two stops are pulled apart in hue so the sweep actually reads as
+     a gradient — simply lowering both alphas washed the stops together and made
+     the surface look flat rather than softer. */
+  --ds-glass-ai-a: 0.45;
+  --ds-glass-ai-b: 0.55;
+  --ds-glass-ai-blur: 16px;
+  --ds-ai-fill-a: rgba(255, 255, 255, var(--ds-glass-ai-a));
+  --ds-ai-fill-b: rgba(240, 223, 240, var(--ds-glass-ai-b));
+  --ds-ai-ink: #6b5299;
+  /* Hairline border, kept at a low alpha so the edge reads as thin. The
+     composer's own border is near-white and therefore almost invisible on its
+     glass; a saturated hairline would look heavier than that at the same width. */
+  --ds-ai-border: rgba(158, 130, 190, 0.22);
+  /* Solid stand-in used when blur is unavailable or transparency is reduced. */
+  --ds-ai-solid: #f8f5fa;
+  --ds-glass-modal-a: 0.86;
+  --ds-glass-modal-b: 0.7;
+  --ds-glass-modal-blur: 30px;
+  --ds-glass-reading-a: 0.96;
+  --ds-glass-reading-b: 0.9;
+  --ds-glass-reading-blur: 0px;
+  --ds-glass-border: rgba(255, 255, 255, 0.82);
+  --ds-glass-highlight: rgba(255, 255, 255, 0.84);
+  --ds-glass-shadow: 0 18px 48px rgba(46, 77, 230, 0.14);
+  --ds-glass-shadow-soft: 0 8px 26px rgba(46, 77, 230, 0.1);
+  /* Solid fallback fill, used when backdrop-filter is unavailable. */
+  --ds-glass-fallback: #f6f9ff;
+
+  /* ---- User message ink ----
+     Brand blue marks the user's own words, in the composer and in the sent
+     bubble. `#4d6bfe` is too light to serve as body text on a pale fill
+     (~3.5:1, below the 4.5:1 WCAG AA floor), so the ink is the darker
+     `#2e4de6` (~5:1): the same brand hue family, but readable at body size.
+
+     `--dsw-specific-bubble` is the token the shell's own `.bubble` rule reads
+     for its background, so setting it here fixes the bubble at the source. The
+     label tokens follow because the shell inks that same bubble with
+     `--dsw-alias-label-primary`, which would otherwise stay near-black. */
+  --ds-user-ink: #2e4de6;
+  --ds-user-ink-dark: #a8baff;
+  --dsw-specific-bubble: linear-gradient(145deg, #e6eeff, #dbe6ff);
+  --ds-user-glass-border: rgba(77, 107, 254, 0.22);
 
   --dsw-alias-bg-base: transparent;
   --dsw-alias-bg-layer-1: rgba(255, 255, 255, 0.74);
@@ -54,6 +271,47 @@ body[data-dsh-deepseek-whale][data-ds-dark-theme] {
   background-color: #070d24;
   --ds-glass: rgba(16, 26, 66, 0.74);
   --ds-shadow: 0 18px 58px rgba(0, 0, 0, 0.38), 0 2px 10px rgba(0, 0, 0, 0.3);
+  /* Dark theme: the same tier structure, re-inked in deep-sea navy. The
+     environment glows brighten instead of darkening, since a dark surface
+     needs light behind it to read as glass at all. */
+  --ds-env-warm: rgba(109, 138, 255, 0.24);
+  --ds-env-cool: rgba(77, 107, 254, 0.3);
+  --ds-env-base: #080f2b;
+  /* Dark theme needs a heavier veil: the artwork is light, so it must be
+     pushed down further before text can sit on a dark surface. */
+  --ds-wallpaper-veil: rgba(8, 15, 43, 0.72);
+
+  --ds-glass-nav-a: 0.34;
+  --ds-glass-nav-b: 0.18;
+  --ds-glass-toolbar-a: 0.46;
+  --ds-glass-toolbar-b: 0.28;
+  --ds-glass-card-a: 0.62;
+  --ds-glass-card-b: 0.46;
+  --ds-glass-ai-a: 0.66;
+  --ds-glass-ai-b: 0.46;
+  --ds-ai-fill-a: rgba(48, 38, 60, var(--ds-glass-ai-a));
+  --ds-ai-fill-b: rgba(40, 32, 52, var(--ds-glass-ai-b));
+  --ds-ai-ink: #cbb4e8;
+  --ds-ai-border: rgba(168, 142, 205, 0.2);
+  --ds-ai-solid: #30263c;
+  --ds-glass-modal-a: 0.8;
+  --ds-glass-modal-b: 0.66;
+  --ds-glass-reading-a: 0.94;
+  --ds-glass-reading-b: 0.88;
+  --ds-glass-border: rgba(143, 166, 255, 0.26);
+  --ds-glass-highlight: rgba(214, 226, 255, 0.22);
+  --ds-glass-shadow: 0 18px 52px rgba(0, 0, 0, 0.42);
+  --ds-glass-shadow-soft: 0 8px 26px rgba(0, 0, 0, 0.32);
+  --ds-glass-fallback: #101a42;
+
+  /* Dark theme ink: `--ds-user-ink` must NOT be restated here. The user bubble
+     in dark mode is filled deep navy, so it needs the LIGHT ink
+     (`--ds-user-ink-dark`); leaving the light-theme `#2e4de6` in place would put
+     dark blue on dark navy (~2.2:1, effectively unreadable). */
+  --ds-user-ink-dark: #a8baff;
+  --dsw-specific-bubble: linear-gradient(145deg, #1e2c72, #16205c);
+  --ds-user-glass-border: rgba(143, 166, 255, 0.3);
+
   --dsw-alias-bg-base: transparent;
   --dsw-alias-bg-layer-1: rgba(19, 32, 84, 0.88);
   --dsw-alias-bg-layer-2: rgba(24, 40, 96, 0.9);
@@ -86,25 +344,57 @@ body[data-dsh-deepseek-whale][data-ds-dark-theme] {
   --dsw-specific-sidebar-fill: transparent;
 }
 
-/* ---- Backdrop ---- */
+/* ---- Clean pane: the stock pane brand artwork is suppressed ----
+   The shell paints its own WhaleMark inside the conversation pane. It is
+   hidden here by its own class hook and by the inline `--dsh-bg-whale` art
+   client/index.ts sweeps, so the pane stays clean on every render. */
+body[data-dsh-deepseek-whale] [class*='whale-mark'],
+body[data-dsh-deepseek-whale] [data-skin-hidden-whale] {
+  display: none !important;
+}
 
-body[data-dsh-deepseek-whale]::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background: var(--ds-whale-backdrop-art) center / cover no-repeat;
-  pointer-events: none;
+/* ---- Modal: the top material tier ----
+   A dialog gets the strongest white coverage and the widest blur, so it clearly
+   sits above the composer. It is the only surface allowed the heaviest grade;
+   the reading tier below stays near-solid instead of blurred. */
+body[data-dsh-deepseek-whale] [role='dialog'][aria-modal='true'],
+body[data-dsh-deepseek-whale] [data-slot='sidebar.settings'] [role='presentation']
+  > [role='dialog'] {
+  background: linear-gradient(145deg,
+    rgba(255, 255, 255, var(--ds-glass-modal-a)),
+    rgba(255, 255, 255, var(--ds-glass-modal-b)));
+  -webkit-backdrop-filter: blur(var(--ds-glass-modal-blur)) saturate(130%);
+  backdrop-filter: blur(var(--ds-glass-modal-blur)) saturate(130%);
+  border: 1px solid var(--ds-glass-border);
+  box-shadow:
+    inset 0 1px 0 var(--ds-glass-highlight),
+    var(--ds-glass-shadow);
+}
+
+body[data-dsh-deepseek-whale][data-ds-dark-theme] [role='dialog'][aria-modal='true'],
+body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-slot='sidebar.settings'] [role='presentation']
+  > [role='dialog'] {
+  background: linear-gradient(145deg,
+    rgba(19, 32, 84, var(--ds-glass-modal-a)),
+    rgba(11, 20, 55, var(--ds-glass-modal-b)));
+  border-color: var(--ds-glass-border);
 }
 
 /* ---- Sidebar: shares the conversation pane surface exactly ---- */
 
-/* The sidebar gets NO skin-owned background: it stays transparent so both
-   columns render over the same backdrop, exactly like the right pane. Only a
-   hairline divider and the native brand recolor remain. */
+/* The sidebar is the nav tier. It is translucent rather than blurred so the
+   wallpaper behind it stays legible as artwork: a 24px backdrop-filter over a
+   detailed image collapses it into flat white haze, which is exactly what made
+   the sidebar look like it had no wallpaper at all while the pane beside it
+   showed one. A light fill plus the hairline border keeps the column separated
+   without destroying what sits behind it. Nothing inside gets a second
+   backdrop-filter (no glass on glass). */
 body[data-dsh-deepseek-whale] :is([data-pane='sidebar'], [class*='sidebarCol']) {
-  background: transparent;
-  border-right: 1px solid rgba(77, 107, 254, 0.14);
+  background: linear-gradient(145deg,
+    rgba(255, 255, 255, var(--ds-glass-nav-a)),
+    rgba(255, 255, 255, var(--ds-glass-nav-b)));
+  border-right: 1px solid var(--ds-glass-border);
+  box-shadow: inset 0 1px 0 var(--ds-glass-highlight);
 }
 
 body[data-dsh-deepseek-whale] :is([data-pane='sidebar'], [class*='sidebarCol']) > div {
@@ -130,11 +420,13 @@ body[data-dsh-deepseek-whale] :is([data-pane='sidebar'], [class*='sidebarCol'])
   color: #4d6bfe;
 }
 
-/* Dark theme: the column stays transparent too — same surface as the pane. */
+/* Dark theme: the same nav tier, re-inked in deep-sea navy. */
 body[data-dsh-deepseek-whale][data-ds-dark-theme]
   :is([data-pane='sidebar'], [class*='sidebarCol']) {
-  background: transparent;
-  border-right: 1px solid rgba(143, 166, 255, 0.16);
+  background: linear-gradient(145deg,
+    rgba(19, 32, 84, var(--ds-glass-nav-a)),
+    rgba(11, 20, 55, var(--ds-glass-nav-b)));
+  border-right: 1px solid var(--ds-glass-border);
 }
 
 body[data-dsh-deepseek-whale][data-ds-dark-theme]
@@ -171,22 +463,48 @@ body[data-dsh-deepseek-whale] [data-skin-chrome='titlebar-brand'] img {
   width: auto;
 }
 
+/* The frameless title bar was an opaque navy gradient, which cut the wallpaper
+   off across the full width of the top edge. It is now a translucent tint of
+   the same hue so the artwork continues behind it; the bar still reads as a
+   distinct band because of its own border and the button colour below. */
 body[data-dsh-deepseek-whale] [class*='titlebar'] {
-  background: linear-gradient(to top, var(--ds-navy-900), var(--ds-navy-700));
+  background: linear-gradient(to top,
+    rgba(11, 20, 55, 0.72),
+    rgba(36, 50, 115, 0.62));
+  -webkit-backdrop-filter: blur(14px) saturate(130%);
+  backdrop-filter: blur(14px) saturate(130%);
+  border-bottom: 1px solid var(--ds-glass-border);
 }
 
 body[data-dsh-deepseek-whale] [class*='titlebar'] [class*='button'] {
   color: #c7d2fe;
 }
 
-/* ---- Composer: DeepSeek-blue glass card ---- */
+/* ---- Composer: DeepSeek-blue glass card ----
+   The material grade itself is set by the toolbar-tier rule further down; this
+   block owns only the input's own text treatment. */
 
-body[data-dsh-deepseek-whale] [data-composer-card] {
-  background: var(--ds-glass);
-  border: 1px solid rgba(77, 107, 254, 0.26);
-  border-radius: 16px;
-  box-shadow: var(--ds-shadow);
-  backdrop-filter: blur(6px) saturate(1.05);
+/* What the user types is inked in the brand blue, matching the sent bubble, so
+   "blue means I wrote this" holds in both places. The placeholder stays muted
+   so it never reads as real content. */
+body[data-dsh-deepseek-whale] [data-composer-card] textarea,
+body[data-dsh-deepseek-whale] [data-composer-card] input[type='text'],
+body[data-dsh-deepseek-whale] [data-composer-card] [contenteditable='true'] {
+  color: var(--ds-user-ink);
+  caret-color: var(--ds-user-ink);
+}
+
+body[data-dsh-deepseek-whale] [data-composer-card] textarea::placeholder,
+body[data-dsh-deepseek-whale] [data-composer-card] input[type='text']::placeholder {
+  color: var(--dsw-alias-label-caption);
+  opacity: 1;
+}
+
+body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-composer-card] textarea,
+body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-composer-card] input[type='text'],
+body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-composer-card] [contenteditable='true'] {
+  color: var(--ds-user-ink-dark);
+  caret-color: var(--ds-user-ink-dark);
 }
 
 body[data-dsh-deepseek-whale] [data-composer-card] textarea:focus {
@@ -265,21 +583,6 @@ body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-slot='sidebar.settings']
   --dsw-alias-bg-layer-2: rgba(24, 40, 96, 0.84);
 }
 
-/* ---- Assistant markdown bubbles: soft porcelain with a blue corner ---- */
-
-body[data-dsh-deepseek-whale] [data-chat-flow-kind='assistant-step'] > * > * > *
-  div[class*='markdown'] {
-  max-width: min(680px, 96%);
-  padding: 14px 18px;
-  border-radius: 16px 16px 16px 6px;
-  background: rgba(255, 255, 255, 0.66);
-}
-
-body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-chat-flow-kind='assistant-step'] > * > * > *
-  div[class*='markdown'] {
-  background: rgba(19, 32, 84, 0.72);
-}
-
 /* ---- Hero headline on the light whale sky ---- */
 
 body[data-dsh-deepseek-whale] [data-phase='hero'] [class*='headlineText'] {
@@ -292,38 +595,9 @@ body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-phase='hero'] [class*='h
   text-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
 }
 
-/* ---- Centered brand lockup: official whale + DeepSeek wordmark ---- */
-
-/* Seat the lockup at the middle of the conversation pane (right of the
-   sidebar). The pane center shifts with the sidebar, so the offset rides the
-   same --maid-sidebar-width custom property the backdrop uses. It is a pure
-   backdrop layer: z-index -1 (same floor as the backdrop art), pointer-events
-   none and no hover styling — it never covers messages or steals clicks. */
-body[data-dsh-deepseek-whale] [data-skin-chrome='brand-lockup'] {
-  position: fixed;
-  left: calc(50% + (var(--maid-sidebar-width, 280px) / 2));
-  top: 42%;
-  transform: translate(-50%, -50%);
-  z-index: -1;
-  pointer-events: none;
-  opacity: 0.9;
-  filter: drop-shadow(0 0 22px rgba(77, 107, 254, 0.45))
-          drop-shadow(0 0 60px rgba(77, 107, 254, 0.28))
-          drop-shadow(0 14px 34px rgba(46, 77, 230, 0.3));
-}
-
-/* Large: matches the original backdrop whale footprint (~600px wide). */
-body[data-dsh-deepseek-whale] [data-skin-chrome='brand-lockup'] [data-brand-glyph] {
-  display: block;
-  width: clamp(430px, 42vw, 620px);
-  height: auto;
-}
-
-body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-skin-chrome='brand-lockup'] {
-  filter: drop-shadow(0 0 26px rgba(143, 166, 255, 0.5))
-          drop-shadow(0 0 70px rgba(143, 166, 255, 0.3))
-          drop-shadow(0 14px 34px rgba(0, 0, 0, 0.45));
-}
+/* ---- Centered brand lockup: removed ----
+   The pane carries no skin-owned whale art any more; the lockup layer is gone
+   so the conversation area reads clean. */
 
 /* ============================================================
    Detail layer: DeepSeek-blue glow, glass, and motion accents
@@ -349,26 +623,49 @@ body[data-dsh-deepseek-whale][data-ds-dark-theme]::after {
   box-shadow: 0 0 14px rgba(143, 166, 255, 0.6), 0 0 40px rgba(143, 166, 255, 0.35);
 }
 
-/* 2. Composer: pale-blue glass border that blooms on focus. */
+/* 2. Composer: the toolbar tier. Sits above the pane content and below a
+      dialog; blooms on focus without changing its material grade. */
 body[data-dsh-deepseek-whale] [data-composer-card] {
-  border: 1px solid rgba(77, 107, 254, 0.35);
-  box-shadow: var(--ds-shadow), 0 0 0 1px rgba(77, 107, 254, 0.08), 0 0 18px rgba(77, 107, 254, 0.1);
+  background: linear-gradient(145deg,
+    rgba(255, 255, 255, var(--ds-glass-toolbar-a)),
+    rgba(255, 255, 255, var(--ds-glass-toolbar-b)));
+  -webkit-backdrop-filter: blur(var(--ds-glass-toolbar-blur)) saturate(130%);
+  backdrop-filter: blur(var(--ds-glass-toolbar-blur)) saturate(130%);
+  border: 1px solid var(--ds-glass-border);
+  box-shadow:
+    inset 0 1px 0 var(--ds-glass-highlight),
+    var(--ds-shadow),
+    0 0 18px rgba(77, 107, 254, 0.1);
   transition: border-color 260ms ease, box-shadow 260ms ease;
 }
 
 body[data-dsh-deepseek-whale] [data-composer-card]:focus-within {
   border-color: rgba(77, 107, 254, 0.65);
-  box-shadow: var(--ds-shadow), 0 0 0 1px rgba(77, 107, 254, 0.2), 0 0 26px rgba(77, 107, 254, 0.28);
+  box-shadow:
+    inset 0 1px 0 var(--ds-glass-highlight),
+    var(--ds-shadow),
+    0 0 0 1px rgba(77, 107, 254, 0.2),
+    0 0 26px rgba(77, 107, 254, 0.28);
 }
 
 body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-composer-card] {
-  border-color: rgba(143, 166, 255, 0.4);
-  box-shadow: var(--ds-shadow), 0 0 0 1px rgba(143, 166, 255, 0.1), 0 0 18px rgba(143, 166, 255, 0.12);
+  background: linear-gradient(145deg,
+    rgba(19, 32, 84, var(--ds-glass-toolbar-a)),
+    rgba(11, 20, 55, var(--ds-glass-toolbar-b)));
+  border-color: var(--ds-glass-border);
+  box-shadow:
+    inset 0 1px 0 var(--ds-glass-highlight),
+    var(--ds-shadow),
+    0 0 18px rgba(143, 166, 255, 0.12);
 }
 
 body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-composer-card]:focus-within {
   border-color: rgba(143, 166, 255, 0.7);
-  box-shadow: var(--ds-shadow), 0 0 0 1px rgba(143, 166, 255, 0.22), 0 0 28px rgba(143, 166, 255, 0.3);
+  box-shadow:
+    inset 0 1px 0 var(--ds-glass-highlight),
+    var(--ds-shadow),
+    0 0 0 1px rgba(143, 166, 255, 0.22),
+    0 0 28px rgba(143, 166, 255, 0.3);
 }
 
 /* 3. Selected session: a brand-blue left-edge indicator bar instead of a
@@ -400,39 +697,133 @@ body[data-dsh-deepseek-whale][data-ds-dark-theme] :is([data-pane='sidebar'], [cl
   box-shadow: 0 0 8px rgba(143, 166, 255, 0.6);
 }
 
-/* 4. Message bubbles: user = brand-blue gradient; assistant = porcelain glass
-      with a blue left edge (dark theme gets the deep-sea versions). */
-body[data-dsh-deepseek-whale] [data-chat-flow-kind='user'] > * > * > *
-  div[class*='markdown'] {
-  max-width: min(680px, 96%);
-  padding: 14px 18px;
-  border-radius: 18px 18px 7px 18px;
-  background: linear-gradient(145deg, #6e8bff, #2e4de6);
-  color: #ffffff;
-  box-shadow: 0 4px 16px rgba(46, 77, 230, 0.28), 0 0 12px rgba(77, 107, 254, 0.16);
+/* 4. Message bodies.
+      Two different renderers, so two different hooks — this is the part that is
+      easy to get wrong:
+        - the user's own message renders as  [data-chat-flow-kind='user'] >
+          .userRow > .userStack > .bubble (class hashed per build, matched by its
+          stable `_bubble` suffix);
+        - assistant output renders through AssistantMarkdown as
+          div[class*='markdown'].
+      Styling `div[class*='markdown']` for the user therefore matches nothing:
+      that selector only ever exists on assistant nodes.
+
+      User colour pair: pale brand-blue panel with brand-blue ink. `#4d6bfe` only
+      reaches ~3.5:1 on a pale fill and fails WCAG AA for body text, so the ink
+      is the darker `--ds-brand-strong` (~5:1) — same brand hue, readable at
+      body size. */
+body[data-dsh-deepseek-whale] [data-chat-flow-kind='user'] [class*='_bubble'] {
+  background: linear-gradient(145deg, #e6eeff, #dbe6ff);
+  border: 1px solid var(--ds-user-glass-border);
+  color: var(--ds-user-ink);
+  box-shadow: 0 4px 16px rgba(46, 77, 230, 0.14), 0 0 12px rgba(77, 107, 254, 0.08);
 }
 
+/* Keep the ink on every descendant: markdown children (paragraphs, list items,
+   links, inline code) carry their own colours that would otherwise win. */
+body[data-dsh-deepseek-whale] [data-chat-flow-kind='user'] [class*='_bubble'] :is(p, li, span, a, strong, em, code, h1, h2, h3) {
+  color: inherit;
+}
+
+body[data-dsh-deepseek-whale] [data-chat-flow-kind='user'] [class*='_bubble'] a {
+  text-decoration-color: currentColor;
+}
+
+/* ---- Conversation width ----
+   The shell sizes the whole conversation column from custom properties on the
+   conversation root: `--dsh-chat-content-width` (748px by default) drives the
+   transcript column, and the composer width is derived from it as
+   `calc(content + 32px)`. Widening the column is therefore a matter of
+   overriding the properties, not of chasing individual rules.
+
+   Widths are unified so the input box, the assistant replies and the column all
+   end on one vertical edge. Three separate things had to agree for that:
+     1. the composer's own max-width (the shell adds 32px of its own here);
+     2. the 24px horizontal padding on the composer's seat, which inset the
+        input box from the column even after the max-widths matched;
+     3. the per-message caps, which used a 96% arm that resolves against the
+        parent and so could never reach the full column width.
+
+   Where the override has to land matters, and this is the subtle part. The
+   properties are declared on the conversation root element itself, and that same
+   element also consumes them to derive the composer width. A custom property
+   declared on <body> therefore does NOT work: the element's own declaration
+   beats the inherited value, so the shell's 748px would still win.
+
+   The root is targeted through its `data-phase` attribute (the conversation root
+   is the only element carrying it) rather than by its hash-named class, which
+   changes on every rebuild. Matching `[class*='_root']` is not an option
+   either: twenty different plugins ship a `_root` class. */
+body[data-dsh-deepseek-whale] [data-phase] {
+  --dsh-chat-content-width: 920px;
+  --dsh-composer-card-max-width: 920px;
+}
+
+/* Remove the composer seat's horizontal padding so the input box spans the same
+   width as the column instead of being inset by 24px on each side. Targeting the
+   seat by its stable `data-composer-seat` attribute avoids depending on hashed
+   class names or on structural `:has()` guesses. */
+body[data-dsh-deepseek-whale] [data-composer-seat] > * {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Both message caps fill the column outright. The earlier `min(Npx, 96%)` form
+   resolved its percentage against the parent, so the bubbles could never reach
+   the column width and stayed visibly inset from the composer edge. */
+body[data-dsh-deepseek-whale] [data-chat-flow-kind='user'] [class*='_userStack'] {
+  max-width: 100%;
+}
+
+/* The assistant surface fills the column outright: the cap is the column width,
+   with no percentage arm, so a reply's edges line up with the composer's.
+   All four corners share one radius — the earlier asymmetric "speech tail"
+   (18px/7px) read as a defect rather than a deliberate shape, and it broke the
+   silhouette against the composer below it.
+
+   The surface keeps its own hairline border and a plain drop shadow. The glow
+   and hover treatment that briefly lived here were removed: a reply is static
+   content, and an always-on halo made it read as an interactive control. */
 body[data-dsh-deepseek-whale] [data-chat-flow-kind='assistant-step'] > * > * > *
   div[class*='markdown'] {
-  max-width: min(680px, 96%);
+  max-width: 100%;
   padding: 14px 18px;
-  border-radius: 18px 18px 18px 7px;
-  border: 1px solid rgba(77, 107, 254, 0.24);
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 4px 14px rgba(46, 77, 230, 0.1), inset 3px 0 0 rgba(77, 107, 254, 0.35);
+  border-radius: 22px;
+  border: 1px solid var(--ds-ai-border);
+  background: linear-gradient(120deg, var(--ds-ai-fill-a), var(--ds-ai-fill-b));
+  color: var(--ds-ai-ink);
+  -webkit-backdrop-filter: blur(var(--ds-glass-ai-blur)) saturate(130%);
+  backdrop-filter: blur(var(--ds-glass-ai-blur)) saturate(130%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 8px 26px rgba(122, 100, 158, 0.13);
 }
 
-body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-chat-flow-kind='user'] > * > * > *
-  div[class*='markdown'] {
-  background: linear-gradient(145deg, #3b5bff, #2439c9);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35), 0 0 14px rgba(77, 107, 254, 0.3);
+/* Keep the warm ink on every markdown descendant: the markdown renderer styles
+   paragraphs, list items, links, headings and inline code with its own colours,
+   which would otherwise override the surface colour. */
+body[data-dsh-deepseek-whale] [data-chat-flow-kind='assistant-step'] > * > * > *
+  div[class*='markdown'] :is(p, li, span, strong, em, h1, h2, h3, h4, blockquote) {
+  color: inherit;
+}
+
+/* Dark theme: the user panel inverts to a deep-blue fill with light-blue ink,
+   keeping the same "brand blue means it is mine" reading. */
+body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-chat-flow-kind='user'] [class*='_bubble'] {
+  background: linear-gradient(145deg, #1e2c72, #16205c);
+  border-color: rgba(143, 166, 255, 0.3);
+  color: var(--ds-user-ink-dark);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3), 0 0 14px rgba(77, 107, 254, 0.18);
 }
 
 body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-chat-flow-kind='assistant-step'] > * > * > *
   div[class*='markdown'] {
-  border-color: rgba(143, 166, 255, 0.3);
-  background: rgba(19, 32, 84, 0.78);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25), inset 3px 0 0 rgba(143, 166, 255, 0.4);
+  border-color: var(--ds-ai-border);
+  background: linear-gradient(120deg, var(--ds-ai-fill-a), var(--ds-ai-fill-b));
+  color: var(--ds-ai-ink);
+  box-shadow:
+    inset 0 1px 0 rgba(228, 205, 240, 0.16),
+    0 8px 26px rgba(0, 0, 0, 0.34);
 }
 
 /* 5. Primary actions (send / new session): brand-blue gradient + hover glow. */
@@ -450,22 +841,59 @@ body[data-dsh-deepseek-whale] [data-composer-card] button[class*='primary']:hove
   transform: translateY(-1px);
 }
 
+/* The new-session button is a secondary control, not the page's primary
+   action — the composer's send button already owns that role. The shell ships
+   it as a bordered, lightly filled button; an earlier pass here overrode it
+   with the saturated brand gradient, which made a create action compete with
+   send for attention and sit far heavier than the rail around it.
+
+   It now uses a faint brand tint that still reads as actionable against the
+   wallpaper, and matches the blue used by the rest of this skin rather than
+   introducing a new tone. */
 body[data-dsh-deepseek-whale] button[class*='newSession'] {
-  background: linear-gradient(145deg, #6e8bff, #2e4de6);
-  color: #ffffff;
-  border: none;
-  box-shadow: 0 2px 10px rgba(46, 77, 230, 0.3);
-  transition: box-shadow 220ms ease, transform 220ms ease, filter 220ms ease;
+  background: linear-gradient(145deg,
+    rgba(77, 107, 254, 0.14),
+    rgba(77, 107, 254, 0.08));
+  color: var(--ds-user-ink);
+  border: 1px solid rgba(77, 107, 254, 0.24);
+  box-shadow: none;
+  transition: background 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
 }
 
 body[data-dsh-deepseek-whale] button[class*='newSession']:hover {
-  box-shadow: 0 2px 14px rgba(46, 77, 230, 0.5), 0 0 16px rgba(77, 107, 254, 0.35);
-  filter: brightness(1.08);
-  transform: translateY(-1px);
+  background: linear-gradient(145deg,
+    rgba(77, 107, 254, 0.22),
+    rgba(77, 107, 254, 0.13));
+  border-color: rgba(77, 107, 254, 0.38);
+  box-shadow: 0 2px 10px rgba(77, 107, 254, 0.14);
 }
 
-body[data-dsh-deepseek-whale] [data-composer-card] button[class*='primary'] svg,
-body[data-dsh-deepseek-whale] button[class*='newSession'] svg {
+body[data-dsh-deepseek-whale][data-ds-dark-theme] button[class*='newSession'] {
+  background: linear-gradient(145deg,
+    rgba(143, 166, 255, 0.16),
+    rgba(143, 166, 255, 0.09));
+  color: var(--ds-user-ink-dark);
+  border-color: rgba(143, 166, 255, 0.26);
+}
+
+body[data-dsh-deepseek-whale][data-ds-dark-theme] button[class*='newSession']:hover {
+  background: linear-gradient(145deg,
+    rgba(143, 166, 255, 0.24),
+    rgba(143, 166, 255, 0.14));
+  border-color: rgba(143, 166, 255, 0.4);
+}
+
+/* The collapsed rail renders the same button as a bare 36px icon; a filled
+   pill there would look like a stray chip, so it stays flat and only its
+   glyph carries the brand tint. */
+body[data-dsh-deepseek-whale] button[class*='newSession'][class*='rail'] {
+  box-shadow: none;
+}
+
+/* Only the composer's primary button carries white-on-gradient; the
+   new-session icon inherits the button's own tinted ink instead, so it stays
+   visible now that the button is a light fill rather than a solid gradient. */
+body[data-dsh-deepseek-whale] [data-composer-card] button[class*='primary'] svg {
   color: #ffffff;
 }
 
@@ -513,25 +941,34 @@ body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-phase='hero'] [class*='h
   background: linear-gradient(90deg, transparent, rgba(143, 166, 255, 0.8), transparent);
 }
 
-/* 9. Particle waterline at the viewport floor: blue light motes stream
-      continuously from the left edge to the right, each on its own delay,
-      speed, height, and size (seeded by client/index.ts). */
-body[data-dsh-deepseek-whale] [data-skin-chrome='bottom-waves'] {
+/* 9a. Edge waterlines: blue light motes streaming continuously along the
+       viewport floor and ceiling. The bottom band flows left-to-right and the
+       top band right-to-left, so the pair frames the pane as a mirror. Each
+       mote rides its own delay, speed, height and size. */
+body[data-dsh-deepseek-whale] [data-skin-chrome='bottom-waves'],
+body[data-dsh-deepseek-whale] [data-skin-chrome='top-waves'] {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
   height: 56px;
-  z-index: 1;
+  z-index: 2;
   overflow: hidden;
   pointer-events: none;
   opacity: 0.9;
 }
 
-body[data-dsh-deepseek-whale] [data-skin-chrome='bottom-waves'] [data-skin-particle] {
+body[data-dsh-deepseek-whale] [data-skin-chrome='bottom-waves'] {
+  bottom: 0;
+}
+
+body[data-dsh-deepseek-whale] [data-skin-chrome='top-waves'] {
+  top: 0;
+}
+
+body[data-dsh-deepseek-whale] [data-skin-chrome='bottom-waves'] [data-skin-particle],
+body[data-dsh-deepseek-whale] [data-skin-chrome='top-waves'] [data-skin-particle] {
   position: absolute;
   top: var(--ds-mote-top, 20px);
-  left: -12px;
   width: var(--ds-mote-size, 3px);
   height: var(--ds-mote-size, 3px);
   border-radius: 50%;
@@ -542,13 +979,149 @@ body[data-dsh-deepseek-whale] [data-skin-chrome='bottom-waves'] [data-skin-parti
   animation-delay: var(--ds-mote-delay, 0s);
 }
 
+/* The bottom band enters at the left edge and travels right. */
+body[data-dsh-deepseek-whale] [data-skin-chrome='bottom-waves'] [data-skin-particle] {
+  left: -12px;
+}
+
+/* The top band enters at the right edge and travels left: the same keyframes
+   run in reverse, so the two edges mirror without a second animation. */
+body[data-dsh-deepseek-whale] [data-skin-chrome='top-waves'] [data-skin-particle] {
+  right: -12px;
+  animation-direction: reverse;
+}
+
 @keyframes ds-mote-stream {
   from { transform: translateX(0); }
   to { transform: translateX(calc(100vw + 24px)); }
 }
 
+/* 9b. Full-screen drifting particle field layered above the waterline: motes
+       scattered across the whole viewport, drifting on a slow ambient wander
+       and pushed away by the pointer with an inertial return. Three depth bands
+       (far / mid / near) differ in size, brightness and blur, which is what
+       reads as depth. client/index.ts owns each mote's position via transform
+       (its RAF loop is the single writer), so this rule must not set left/top
+       or a competing animation. The layer is inert and sits above the pane
+       surfaces so the motion stays visible, but below the composer chrome. */
+body[data-dsh-deepseek-whale] [data-skin-chrome='particle-field'] {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+body[data-dsh-deepseek-whale] [data-skin-chrome='particle-field'] [data-skin-particle] {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(143, 166, 255, 0.95), rgba(77, 107, 254, 0.35) 60%, transparent 100%);
+  opacity: var(--ds-mote-opacity, 0.5);
+  will-change: transform;
+}
+
+/* Depth band: far. Small, dim, softly out of focus — reads as distant. */
+body[data-dsh-deepseek-whale] [data-skin-chrome='particle-field'] [data-skin-depth='far'] {
+  width: 3px;
+  height: 3px;
+  filter: blur(1.1px);
+}
+
+/* Depth band: mid. The baseline look. */
+body[data-dsh-deepseek-whale] [data-skin-chrome='particle-field'] [data-skin-depth='mid'] {
+  width: 5px;
+  height: 5px;
+  box-shadow: 0 0 6px rgba(77, 107, 254, 0.55);
+}
+
+/* Depth band: near. Largest, brightest, crisp, with the widest bloom — reads
+   as closest to the viewer, and takes the strongest push from the pointer. */
+body[data-dsh-deepseek-whale] [data-skin-chrome='particle-field'] [data-skin-depth='near'] {
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle, rgba(214, 226, 255, 0.98), rgba(109, 138, 255, 0.5) 55%, transparent 100%);
+  box-shadow: 0 0 10px rgba(77, 107, 254, 0.85), 0 0 24px rgba(77, 107, 254, 0.5);
+}
+
+/* ============================================================
+   Graceful degradation for the glass materials.
+   Explicit fallbacks are part of the implementation, not a polish step: a
+   surface that only works with backdrop-filter is broken for everyone whose
+   browser or accessibility settings disable it.
+   ============================================================ */
+
+/* No backdrop-filter: fall back to a solid fill so text contrast never depends
+   on what happens to be behind the surface. The assistant surface falls back to
+   its own warm solid rather than the shared cool one, so the warm/cool split
+   between the two speakers survives the downgrade. */
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  body[data-dsh-deepseek-whale] [data-skin-glass] {
+    background: var(--ds-glass-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  body[data-dsh-deepseek-whale] [data-chat-flow-kind='assistant-step'] > * > * > *
+    div[class*='markdown'] {
+    background: var(--ds-ai-solid);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* Reduced transparency: strip the stacked translucent layers rather than the
+   artwork itself. What this preference asks for is fewer see-through
+   overlays — the blue glows and the veil both qualify, so they go, while the
+   wallpaper stays as a single opaque layer. The glass tiers turn solid below. */
+@media (prefers-reduced-transparency: reduce) {
+  body[data-dsh-deepseek-whale] {
+    background-image: var(--ds-wallpaper-art);
+    background-color: var(--ds-env-base);
+    background-size: cover;
+    background-position: center;
+  }
+
+  body[data-dsh-deepseek-whale] [data-skin-glass] {
+    background: var(--ds-glass-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  body[data-dsh-deepseek-whale] [data-chat-flow-kind='assistant-step'] > * > * > *
+    div[class*='markdown'] {
+    background: var(--ds-ai-solid);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* More contrast: strengthen the surface edges so boundaries stay visible even
+   where the fill is nearly transparent. The assistant surface keeps its warm
+   border hue instead of the cool override, just darkened. */
+@media (prefers-contrast: more) {
+  body[data-dsh-deepseek-whale] [data-skin-glass] {
+    border-color: #4a5f8a;
+  }
+
+  body[data-dsh-deepseek-whale] [data-chat-flow-kind='assistant-step'] > * > * > *
+    div[class*='markdown'] {
+    border-color: #6b5299;
+  }
+
+  body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-skin-glass] {
+    border-color: #9fb2de;
+  }
+
+  body[data-dsh-deepseek-whale][data-ds-dark-theme] [data-chat-flow-kind='assistant-step'] > * > * > *
+    div[class*='markdown'] {
+    border-color: #a88ecd;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  body[data-dsh-deepseek-whale] [data-skin-chrome='bottom-waves'] {
+  body[data-dsh-deepseek-whale] [data-skin-chrome='particle-field'] {
     display: none;
   }
 }

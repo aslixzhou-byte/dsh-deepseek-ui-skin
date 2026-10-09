@@ -1,0 +1,10 @@
+﻿# Build/dev artifacts
+node_modules/
+.backup-*/
+*.log
+
+# Editor / OS noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
